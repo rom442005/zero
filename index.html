@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zéro">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<title>Zéro</title>
+<style>
+:root{
+  --bg:#0b0b0c; --fg:#f2f2f0; --mute:#76767a; --line:#1f1f23; --cell:#17171a; --veil:rgba(11,11,12,.95);
+}
+@media (prefers-color-scheme: light){
+  :root{ --bg:#f6f5f2; --fg:#111; --mute:#8a8a86; --line:#e3e1db; --cell:#e9e7e1; --veil:rgba(246,245,242,.96); }
+}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ margin:0; background:var(--bg); color:var(--fg); overscroll-behavior:none; }
+body{
+  font:15px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+  font-variant-numeric:tabular-nums; touch-action:manipulation; -webkit-user-select:none; user-select:none;
+  min-height:100vh;
+  padding:max(20px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom));
+}
+main{ max-width:420px; margin:0 auto; display:flex; flex-direction:column; gap:34px; }
+header{ display:flex; justify-content:space-between; color:var(--mute); font-size:12px; letter-spacing:.08em; text-transform:uppercase; }
+
+.hero{ text-align:center; padding-top:6px; }
+.big{ font-size:clamp(110px, 34vw, 190px); font-weight:200; line-height:1; letter-spacing:-.04em; }
+.unit{ color:var(--mute); font-size:12px; letter-spacing:.18em; text-transform:uppercase; margin-top:4px; }
+.live{ color:var(--mute); font-size:14px; margin-top:16px; min-height:20px; }
+
+.level{ display:flex; flex-direction:column; gap:10px; }
+.level .row{ display:flex; justify-content:space-between; align-items:baseline; }
+.level .name{ font-size:17px; font-weight:400; }
+.level .name small{ color:var(--mute); font-size:12px; letter-spacing:.08em; text-transform:uppercase; margin-right:8px; }
+.level .xp{ color:var(--mute); font-size:12px; }
+.bar{ height:3px; background:var(--line); border-radius:3px; overflow:hidden; }
+.bar > i{ display:block; height:100%; background:var(--fg); border-radius:3px; transition:width .6s ease; }
+
+.badges{ display:grid; grid-template-columns:repeat(9,1fr); gap:6px; }
+.badge{ aspect-ratio:1; border-radius:50%; border:1px solid var(--line); display:grid; place-items:center; font-size:10px; color:var(--mute); }
+.badge.on{ background:var(--fg); color:var(--bg); border-color:var(--fg); font-weight:600; }
+.badge.next{ border-color:var(--fg); color:var(--fg); }
+.nextTxt{ color:var(--mute); font-size:12px; text-align:center; margin-top:12px; }
+
+.stats{ display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.stat{ padding:16px 0; text-align:center; }
+.stat + .stat{ border-left:1px solid var(--line); }
+.stat b{ display:block; font-size:24px; font-weight:300; }
+.stat span{ color:var(--mute); font-size:10px; letter-spacing:.08em; text-transform:uppercase; }
+
+.grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+.dow{ color:var(--mute); font-size:10px; text-align:center; letter-spacing:.06em; }
+.cell{ aspect-ratio:1; border-radius:6px; background:var(--cell); border:0; padding:0; position:relative; font:inherit; }
+.cell.ok{ background:var(--fg); cursor:pointer; }
+.cell.gap{ background:transparent; border:1.5px solid var(--mute); cursor:pointer; }
+.cell.off{ opacity:.3; }
+.cell.fut{ background:transparent; border:1px dashed var(--line); }
+.cell.today{ outline:1.5px solid var(--fg); outline-offset:2px; }
+.cell.ok.today{ outline-color:var(--mute); }
+.cell i{ position:absolute; right:4px; bottom:2px; font-size:9px; font-style:normal; color:var(--bg); opacity:.65; }
+.hint{ color:var(--mute); font-size:12px; text-align:center; margin-top:10px; }
+
+.actions{ display:flex; flex-direction:column; gap:10px; }
+button.btn{
+  font:inherit; font-size:16px; padding:16px; border-radius:14px; border:1px solid var(--line);
+  background:transparent; color:var(--fg); cursor:pointer; transition:transform .08s ease;
+}
+button.btn:active{ transform:scale(.98); }
+button.main{ background:var(--fg); color:var(--bg); border-color:var(--fg); }
+button.ghost{ color:var(--mute); }
+
+footer{ text-align:center; }
+footer button{ font:inherit; font-size:12px; color:var(--mute); background:none; border:0; cursor:pointer; padding:8px; opacity:.7; }
+
+.toast{ position:fixed; inset:0; background:var(--veil); display:flex; align-items:center; justify-content:center; text-align:center; z-index:10; animation:fade .35s ease; cursor:pointer; }
+.toast[hidden]{ display:none; }
+.toast small{ display:block; color:var(--mute); font-size:12px; letter-spacing:.2em; text-transform:uppercase; margin-bottom:14px; }
+.toast b{ display:block; font-size:64px; font-weight:200; letter-spacing:-.03em; line-height:1.05; }
+.toast span{ display:block; color:var(--mute); font-size:17px; margin-top:12px; }
+.toast em{ display:block; color:var(--mute); font-size:12px; font-style:normal; margin-top:48px; opacity:.6; }
+@keyframes fade{ from{ opacity:0; transform:scale(1.02); } to{ opacity:1; transform:none; } }
+</style>
+</head>
+<body>
+<main>
+  <header><span>Zéro</span><span id="date"></span></header>
+
+  <section class="hero">
+    <div class="big" id="streak">0</div>
+    <div class="unit" id="unit">jours</div>
+    <div class="live" id="live"></div>
+  </section>
+
+  <section class="level">
+    <div class="row">
+      <div class="name"><small id="lvl">Niv. 1</small><span id="lvlName"></span></div>
+      <div class="xp" id="xpTxt"></div>
+    </div>
+    <div class="bar"><i id="bar"></i></div>
+  </section>
+
+  <section>
+    <div class="badges" id="badges"></div>
+    <div class="nextTxt" id="nextTxt"></div>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><b id="sBest">0</b><span>Record</span></div>
+    <div class="stat"><b id="sClean">0</b><span>Jours</span></div>
+    <div class="stat"><b id="sRate">0%</b><span>30 jours</span></div>
+    <div class="stat"><b id="sWins">0</b><span>Défis</span></div>
+  </section>
+
+  <section>
+    <div class="grid" id="grid"></div>
+    <div class="hint">Touche un jour pour le corriger</div>
+  </section>
+
+  <section class="actions">
+    <button class="btn main" id="win">Défi surmonté&nbsp; +1</button>
+    <button class="btn ghost" id="restart">Nouveau départ</button>
+  </section>
+
+  <footer><button id="reset">Tout effacer</button></footer>
+</main>
+
+<div class="toast" id="toast" hidden>
+  <div><small id="tKind"></small><b id="tTitle"></b><span id="tSub"></span><em>toucher pour continuer</em></div>
+</div>
+
+<script>
+(() => {
+  const KEY = 'zero.v1';
+  const DAY = 864e5;
+
+  // paliers (jours de série) et niveaux (XP cumulée)
+  const BADGES = [
+    [1, 'Premier pas'], [3, 'Élan'], [7, 'Une semaine'], [14, 'Quinzaine'], [30, 'Un mois'],
+    [60, 'Deux mois'], [90, 'Trimestre'], [180, 'Semestre'], [365, 'Une année'],
+  ];
+  const LEVELS = ['Départ', 'Souffle', 'Ancrage', 'Clarté', 'Cap', 'Rigueur', 'Constance', 'Maîtrise', 'Sérénité', 'Équilibre', 'Sagesse', 'Zénith'];
+  const xpFor = L => 50 * (L - 1) * L;                       // XP cumulée pour atteindre le niveau L
+  const levelName = L => LEVELS[Math.min(L, LEVELS.length) - 1];
+  const DAY_XP = run => 10 + Math.min(run, 10);              // 11 → 20 selon la série
+  const WIN_XP = 5, WIN_XP_CAP = 3;                          // défis comptés par jour
+
+  // ---------- dates ----------
+  const pad = n => String(n).padStart(2, '0');
+  const key = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const parse = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const diffDays = (a, b) => Math.round((parse(b) - parse(a)) / DAY);
+
+  // ---------- stockage ----------
+  let memory = null;
+  function load() {
+    try { const raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+    return memory;
+  }
+  function save() {
+    memory = state;
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+  let state = load() || { start: key(new Date()), startTs: Date.now(), days: {} };
+  save();
+
+  // ---------- calcul ----------
+  function compute() {
+    const today = key(new Date());
+    const n = diffDays(state.start, today) + 1;
+    const list = [];
+    for (let i = 0; i < n; i++) {
+      const k = key(addDays(parse(state.start), i));
+      const d = state.days[k] || {};
+      list.push({ k, r: !!d.r, u: d.u || 0 });
+    }
+    let run = 0, best = 0, xp = 0, wins = 0;
+    for (const d of list) {
+      if (d.r) run = 0; else { run++; xp += DAY_XP(run); }
+      xp += WIN_XP * Math.min(d.u, WIN_XP_CAP);
+      wins += d.u;
+      best = Math.max(best, run);
+    }
+    const streak = run;
+    const resets = list.filter(d => d.r);
+    const last = resets.length ? resets[resets.length - 1].k : null;
+    const win30 = list.slice(-30);
+    const rate = Math.round(100 * win30.filter(d => !d.r).length / win30.length);
+    let level = 1; while (xpFor(level + 1) <= xp) level++;
+    const badges = BADGES.filter(b => b[0] <= best).length;
+    let ref;
+    if (last) { const t = state.days[last].t; ref = t || (parse(last).getTime() + DAY); }
+    else ref = state.startTs || parse(state.start).getTime();
+    return { today, streak, best, clean: list.length - resets.length, rate, wins, xp, level, badges, ref };
+  }
+
+  // ---------- rendu ----------
+  const $ = id => document.getElementById(id);
+  const DOW = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+  const plural = (n, w) => `${n} ${w}${n > 1 ? 's' : ''}`;
+
+  function fmtElapsed(ms) {
+    const s = Math.floor(Math.max(0, ms) / 1000);
+    const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+    return `${d ? d + ' j ' : ''}${pad(h)} h ${pad(m)} min ${pad(sec)} s`;
+  }
+  function tick() { $('live').textContent = fmtElapsed(Date.now() - compute().ref); }
+
+  function render() {
+    const c = compute();
+    $('date').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    $('streak').textContent = c.streak;
+    $('unit').textContent = c.streak > 1 ? 'jours' : 'jour';
+    $('sBest').textContent = c.best;
+    $('sClean').textContent = c.clean;
+    $('sRate').textContent = c.rate + '%';
+    $('sWins').textContent = c.wins;
+
+    // niveau
+    const lo = xpFor(c.level), hi = xpFor(c.level + 1);
+    $('lvl').textContent = 'Niv. ' + c.level;
+    $('lvlName').textContent = levelName(c.level);
+    $('xpTxt').textContent = `${c.xp - lo} / ${hi - lo} XP`;
+    $('bar').style.width = Math.max(2, 100 * (c.xp - lo) / (hi - lo)) + '%';
+
+    // paliers
+    const next = BADGES.find(b => b[0] > c.streak);
+    $('badges').innerHTML = BADGES.map(b =>
+      `<div class="badge${b[0] <= c.best ? ' on' : ''}${next && next[0] === b[0] ? ' next' : ''}" title="${b[1]}">${b[0]}</div>`).join('');
+    $('nextTxt').textContent = next
+      ? `Prochain palier · ${next[0]} j · encore ${plural(next[0] - c.streak, 'jour')}`
+      : 'Tous les paliers sont atteints';
+
+    // grille : 5 semaines, lundi → dimanche, finissant cette semaine
+    const t = parse(c.today);
+    const first = addDays(addDays(t, -((t.getDay() + 6) % 7)), -28);
+    let html = DOW.map(d => `<div class="dow">${d}</div>`).join('');
+    for (let i = 0; i < 35; i++) {
+      const d = addDays(first, i), k = key(d), e = state.days[k] || {};
+      let cls = 'cell', attr = '';
+      if (k > c.today) cls += ' fut';
+      else if (k < state.start) cls += ' off';
+      else { cls += e.r ? ' gap' : ' ok'; attr = ` data-k="${k}"`; }
+      if (k === c.today) cls += ' today';
+      html += `<button class="${cls}"${attr} title="${d.toLocaleDateString('fr-FR')}">${e.u ? `<i>${e.u}</i>` : ''}</button>`;
+    }
+    $('grid').innerHTML = html;
+
+    const todayReset = !!(state.days[c.today] && state.days[c.today].r);
+    $('restart').textContent = todayReset ? 'Annuler' : 'Nouveau départ';
+    tick();
+    checkUnlocks(c);
+  }
+
+  // ---------- récompenses ----------
+  const queue = [];
+  function checkUnlocks(c) {
+    if (!state.seen) { state.seen = { lvl: c.level, bdg: c.badges }; save(); return; }
+    if (c.level > state.seen.lvl) queue.push({ kind: 'Nouveau niveau', title: 'Niveau ' + c.level, sub: levelName(c.level) });
+    if (c.badges > state.seen.bdg) {
+      const b = BADGES[c.badges - 1];
+      queue.push({ kind: 'Palier atteint', title: plural(b[0], 'jour'), sub: b[1] });
+    }
+    if (c.level > state.seen.lvl || c.badges > state.seen.bdg) {
+      state.seen.lvl = Math.max(state.seen.lvl, c.level);
+      state.seen.bdg = Math.max(state.seen.bdg, c.badges);
+      save();
+    }
+    showNext();
+  }
+  function showNext() {
+    const t = $('toast');
+    if (!t.hidden || !queue.length) return;
+    const q = queue.shift();
+    $('tKind').textContent = q.kind; $('tTitle').textContent = q.title; $('tSub').textContent = q.sub;
+    t.hidden = false;
+  }
+  $('toast').onclick = () => { $('toast').hidden = true; showNext(); };
+
+  // ---------- actions ----------
+  const day = k => state.days[k] || (state.days[k] = {});
+  function toggleReset(k) {
+    const d = day(k);
+    if (d.r) { delete d.r; delete d.t; }
+    else { d.r = 1; if (k === key(new Date())) d.t = Date.now(); }
+    save(); render();
+  }
+  $('win').onclick = () => { const d = day(key(new Date())); d.u = (d.u || 0) + 1; save(); render(); };
+  $('restart').onclick = () => toggleReset(key(new Date()));
+  $('grid').onclick = e => {
+    const el = e.target.closest('.cell[data-k]');
+    if (el) toggleReset(el.dataset.k);
+  };
+
+  let armed = 0;
+  $('reset').onclick = e => {
+    if (!armed) {
+      e.target.textContent = 'Confirmer : tout effacer ?';
+      armed = setTimeout(() => { armed = 0; e.target.textContent = 'Tout effacer'; }, 3000);
+      return;
+    }
+    clearTimeout(armed); armed = 0;
+    state = { start: key(new Date()), startTs: Date.now(), days: {} };
+    save(); e.target.textContent = 'Tout effacer'; render();
+  };
+
+  // ---------- boucle ----------
+  let lastDay = key(new Date());
+  render();
+  setInterval(tick, 1000);
+  setInterval(() => { const k = key(new Date()); if (k !== lastDay) { lastDay = k; render(); } }, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
