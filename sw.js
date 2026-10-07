@@ -1,5 +1,5 @@
 // Réseau d'abord (toujours la dernière version en ligne), cache en secours (hors-ligne).
-const CACHE = 'zero-v2';
+const CACHE = 'zero-v3';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

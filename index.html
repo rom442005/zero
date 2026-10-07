@@ -15,69 +15,94 @@
 <style>
 :root{
   --bg:#0b0b0c; --fg:#f2f2f0; --mute:#76767a; --line:#1f1f23; --cell:#17171a; --veil:rgba(11,11,12,.95);
+  --tick:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 @media (prefers-color-scheme: light){
   :root{ --bg:#f6f5f2; --fg:#111; --mute:#8a8a86; --line:#e3e1db; --cell:#e9e7e1; --veil:rgba(246,245,242,.96); }
 }
 *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html,body{ margin:0; background:var(--bg); color:var(--fg); overscroll-behavior:none; }
+html,body{ margin:0; background:var(--bg); color:var(--fg); overscroll-behavior:none; overflow-x:hidden; }
 body{
   font:15px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
   font-variant-numeric:tabular-nums; touch-action:manipulation; -webkit-user-select:none; user-select:none;
-  min-height:100vh;
-  padding:max(20px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom));
 }
-main{ max-width:420px; margin:0 auto; display:flex; flex-direction:column; gap:34px; }
-header{ display:flex; justify-content:space-between; color:var(--mute); font-size:12px; letter-spacing:.08em; text-transform:uppercase; }
 
-.hero{ text-align:center; padding-top:6px; }
-.big{ font-size:clamp(110px, 34vw, 190px); font-weight:200; line-height:1; letter-spacing:-.04em; }
-.unit{ color:var(--mute); font-size:12px; letter-spacing:.18em; text-transform:uppercase; margin-top:4px; }
-.live{ color:var(--mute); font-size:14px; margin-top:16px; min-height:20px; }
+/* une seule page, tout l'écran */
+main{
+  max-width:420px; margin:0 auto; position:relative;
+  min-height:100vh; min-height:100dvh;
+  padding:max(14px, env(safe-area-inset-top)) 20px max(18px, env(safe-area-inset-bottom));
+  display:flex; flex-direction:column; gap:14px; gap:clamp(10px, 2.1dvh, 22px);
+}
 
-.level{ display:flex; flex-direction:column; gap:10px; }
+header{ display:flex; justify-content:space-between; align-items:center; color:var(--mute); font-size:12px; letter-spacing:.08em; text-transform:uppercase; }
+header .right{ display:flex; align-items:center; gap:6px; }
+#more{ font:inherit; color:var(--mute); background:none; border:0; padding:4px 6px; margin-right:-6px; cursor:pointer; letter-spacing:.1em; }
+.menu{ position:absolute; right:20px; top:max(38px, calc(env(safe-area-inset-top) + 26px)); z-index:5; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:4px; }
+.menu[hidden]{ display:none; }
+.menu button{ font:inherit; font-size:13px; color:var(--mute); background:none; border:0; padding:10px 14px; cursor:pointer; }
+
+.hero{ text-align:center; }
+.big{ font-size:96px; font-size:clamp(64px, 15.5dvh, 150px); font-weight:200; line-height:1; letter-spacing:-.04em; display:inline-block; }
+.unit{ color:var(--mute); font-size:12px; letter-spacing:.18em; text-transform:uppercase; margin-top:2px; }
+.live{ color:var(--mute); font-size:13px; margin-top:8px; min-height:18px; }
+
+.level{ display:flex; flex-direction:column; gap:8px; }
 .level .row{ display:flex; justify-content:space-between; align-items:baseline; }
-.level .name{ font-size:17px; font-weight:400; }
-.level .name small{ color:var(--mute); font-size:12px; letter-spacing:.08em; text-transform:uppercase; margin-right:8px; }
-.level .xp{ color:var(--mute); font-size:12px; }
+.level .name{ font-size:16px; }
+.level .name small{ color:var(--mute); font-size:11px; letter-spacing:.08em; text-transform:uppercase; margin-right:8px; }
+.level .xp{ color:var(--mute); font-size:12px; position:relative; }
+.gain{ position:absolute; right:0; bottom:100%; color:var(--fg); font-weight:600; font-size:14px; opacity:0; pointer-events:none; white-space:nowrap; }
+.gain.show{ animation:gain 1.2s ease-out; }
 .bar{ height:3px; background:var(--line); border-radius:3px; overflow:hidden; }
-.bar > i{ display:block; height:100%; background:var(--fg); border-radius:3px; transition:width .6s ease; }
+.bar > i{ display:block; height:100%; background:var(--fg); border-radius:3px; transition:width .7s cubic-bezier(.2,.8,.2,1); }
 
 .badges{ display:grid; grid-template-columns:repeat(9,1fr); gap:6px; }
 .badge{ aspect-ratio:1; border-radius:50%; border:1px solid var(--line); display:grid; place-items:center; font-size:10px; color:var(--mute); }
 .badge.on{ background:var(--fg); color:var(--bg); border-color:var(--fg); font-weight:600; }
 .badge.next{ border-color:var(--fg); color:var(--fg); }
-.nextTxt{ color:var(--mute); font-size:12px; text-align:center; margin-top:12px; }
+.nextTxt{ color:var(--mute); font-size:12px; text-align:center; margin-top:8px; }
 
 .stats{ display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
-.stat{ padding:16px 0; text-align:center; }
+.stat{ padding:10px 0; text-align:center; }
 .stat + .stat{ border-left:1px solid var(--line); }
-.stat b{ display:block; font-size:24px; font-weight:300; }
+.stat b{ display:block; font-size:22px; font-weight:300; line-height:1.2; }
 .stat span{ color:var(--mute); font-size:10px; letter-spacing:.08em; text-transform:uppercase; }
 
-.grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+.gridsec{ flex:1; min-height:110px; display:flex; }
+.grid{ flex:1; display:grid; grid-template-columns:repeat(7,1fr); grid-template-rows:auto repeat(5, minmax(16px,1fr)); gap:5px; }
 .dow{ color:var(--mute); font-size:10px; text-align:center; letter-spacing:.06em; }
-.cell{ aspect-ratio:1; border-radius:6px; background:var(--cell); border:0; padding:0; position:relative; font:inherit; }
+.cell{ width:100%; height:100%; border-radius:6px; background:var(--cell); border:0; padding:0; position:relative; font:inherit; }
 .cell.ok{ background:var(--fg); cursor:pointer; }
 .cell.gap{ background:transparent; border:1.5px solid var(--mute); cursor:pointer; }
 .cell.off{ opacity:.3; }
 .cell.fut{ background:transparent; border:1px dashed var(--line); }
 .cell.today{ outline:1.5px solid var(--fg); outline-offset:2px; }
 .cell.ok.today{ outline-color:var(--mute); }
-.cell i{ position:absolute; right:4px; bottom:2px; font-size:9px; font-style:normal; color:var(--bg); opacity:.65; }
-.hint{ color:var(--mute); font-size:12px; text-align:center; margin-top:10px; }
+.cell.v::before{ content:''; position:absolute; inset:0; background:var(--bg); opacity:.85;
+  -webkit-mask:var(--tick) center/52% no-repeat; mask:var(--tick) center/52% no-repeat; }
+.cell i{ position:absolute; right:4px; bottom:1px; font-size:9px; font-style:normal; color:var(--bg); opacity:.65; }
+.cell.pop{ animation:pop .7s cubic-bezier(.2,1.5,.4,1); z-index:2; }
+.cell.pop::after{ content:''; position:absolute; inset:0; border-radius:6px; border:1.5px solid var(--fg); animation:ripple .8s ease-out forwards; pointer-events:none; }
+.cell.pop.v::before{ animation:tickin .45s .12s both cubic-bezier(.2,1.4,.4,1); }
 
 .actions{ display:flex; flex-direction:column; gap:10px; }
+.row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 button.btn{
-  font:inherit; font-size:16px; padding:16px; border-radius:14px; border:1px solid var(--line);
-  background:transparent; color:var(--fg); cursor:pointer; transition:transform .08s ease;
+  font:inherit; font-size:15px; padding:0 12px; height:46px; border-radius:14px; border:1px solid var(--line);
+  background:transparent; color:var(--fg); cursor:pointer; position:relative;
+  transition:transform .08s ease, background .35s ease, color .35s ease, border-color .35s ease, opacity .2s;
 }
-button.btn:active{ transform:scale(.98); }
-button.main{ background:var(--fg); color:var(--bg); border-color:var(--fg); }
+button.btn:active{ transform:scale(.97); }
 button.ghost{ color:var(--mute); }
-
-footer{ text-align:center; }
-footer button{ font:inherit; font-size:12px; color:var(--mute); background:none; border:0; cursor:pointer; padding:8px; opacity:.7; }
+button.check{ height:56px; font-size:16px; background:var(--fg); color:var(--bg); border-color:var(--fg); display:flex; align-items:center; justify-content:center; }
+button.check:disabled{ opacity:.3; cursor:default; }
+button.check .tick{ width:0; height:20px; opacity:0; fill:none; stroke:currentColor; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round;
+  stroke-dasharray:24; stroke-dashoffset:24; transition:width .3s ease, margin .3s ease, opacity .2s, stroke-dashoffset .5s .15s ease; }
+button.check.done{ background:transparent; color:var(--fg); border-color:var(--fg); }
+button.check.done .tick{ width:20px; margin-right:9px; opacity:1; stroke-dashoffset:0; }
+button.burst::after{ content:''; position:absolute; inset:-1px; border-radius:14px; border:1.5px solid var(--fg); animation:ring .8s ease-out forwards; pointer-events:none; }
+.big.bump{ animation:bump .6s cubic-bezier(.2,1.4,.4,1); }
 
 .toast{ position:fixed; inset:0; background:var(--veil); display:flex; align-items:center; justify-content:center; text-align:center; z-index:10; animation:fade .35s ease; cursor:pointer; }
 .toast[hidden]{ display:none; }
@@ -85,12 +110,26 @@ footer button{ font:inherit; font-size:12px; color:var(--mute); background:none;
 .toast b{ display:block; font-size:64px; font-weight:200; letter-spacing:-.03em; line-height:1.05; }
 .toast span{ display:block; color:var(--mute); font-size:17px; margin-top:12px; }
 .toast em{ display:block; color:var(--mute); font-size:12px; font-style:normal; margin-top:48px; opacity:.6; }
+
 @keyframes fade{ from{ opacity:0; transform:scale(1.02); } to{ opacity:1; transform:none; } }
+@keyframes pop{ 0%{ transform:scale(.55); } 55%{ transform:scale(1.28); } 100%{ transform:scale(1); } }
+@keyframes ripple{ from{ opacity:.8; transform:scale(1); } to{ opacity:0; transform:scale(2.1); } }
+@keyframes tickin{ from{ opacity:0; transform:scale(.3) rotate(-12deg); } to{ opacity:.85; transform:none; } }
+@keyframes ring{ from{ opacity:.7; transform:scale(1); } to{ opacity:0; transform:scale(1.12, 1.55); } }
+@keyframes bump{ 0%{ transform:scale(1); } 35%{ transform:scale(1.09); } 100%{ transform:scale(1); } }
+@keyframes gain{ 0%{ opacity:0; transform:translateY(8px); } 20%{ opacity:1; } 70%{ opacity:1; } 100%{ opacity:0; transform:translateY(-20px); } }
+
+@media (max-height:700px){ .nextTxt{ display:none; } .live{ margin-top:4px; } }
+@media (prefers-reduced-motion: reduce){ *, *::before, *::after{ animation-duration:.01ms !important; transition-duration:.01ms !important; } }
 </style>
 </head>
 <body>
 <main>
-  <header><span>Zéro</span><span id="date"></span></header>
+  <header>
+    <span>Zéro</span>
+    <span class="right"><span id="date"></span><button id="more" aria-label="Menu">···</button></span>
+  </header>
+  <div class="menu" id="menu" hidden><button id="reset">Tout effacer</button></div>
 
   <section class="hero">
     <div class="big" id="streak">0</div>
@@ -101,7 +140,7 @@ footer button{ font:inherit; font-size:12px; color:var(--mute); background:none;
   <section class="level">
     <div class="row">
       <div class="name"><small id="lvl">Niv. 1</small><span id="lvlName"></span></div>
-      <div class="xp" id="xpTxt"></div>
+      <div class="xp"><span id="xpTxt"></span><span class="gain" id="gain"></span></div>
     </div>
     <div class="bar"><i id="bar"></i></div>
   </section>
@@ -118,17 +157,18 @@ footer button{ font:inherit; font-size:12px; color:var(--mute); background:none;
     <div class="stat"><b id="sWins">0</b><span>Défis</span></div>
   </section>
 
-  <section>
-    <div class="grid" id="grid"></div>
-    <div class="hint">Touche un jour pour le corriger</div>
-  </section>
+  <section class="gridsec"><div class="grid" id="grid"></div></section>
 
   <section class="actions">
-    <button class="btn main" id="win">Défi surmonté&nbsp; +1</button>
-    <button class="btn ghost" id="restart">Nouveau départ</button>
+    <button class="btn check" id="check">
+      <svg class="tick" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      <span id="checkTxt">Valider la journée</span>
+    </button>
+    <div class="row2">
+      <button class="btn" id="win">Défi surmonté +1</button>
+      <button class="btn ghost" id="restart">Nouveau départ</button>
+    </div>
   </section>
-
-  <footer><button id="reset">Tout effacer</button></footer>
 </main>
 
 <div class="toast" id="toast" hidden>
@@ -150,6 +190,7 @@ footer button{ font:inherit; font-size:12px; color:var(--mute); background:none;
   const levelName = L => LEVELS[Math.min(L, LEVELS.length) - 1];
   const DAY_XP = run => 10 + Math.min(run, 10);              // 11 → 20 selon la série
   const WIN_XP = 5, WIN_XP_CAP = 3;                          // défis comptés par jour
+  const CHECK_XP = 10;                                       // journée validée
 
   // ---------- dates ----------
   const pad = n => String(n).padStart(2, '0');
@@ -157,6 +198,7 @@ footer button{ font:inherit; font-size:12px; color:var(--mute); background:none;
   const parse = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
   const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
   const diffDays = (a, b) => Math.round((parse(b) - parse(a)) / DAY);
+  const todayKey = () => key(new Date());
 
   // ---------- stockage ----------
   let memory = null;
@@ -168,22 +210,22 @@ footer button{ font:inherit; font-size:12px; color:var(--mute); background:none;
     memory = state;
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
   }
-  let state = load() || { start: key(new Date()), startTs: Date.now(), days: {} };
+  let state = load() || { start: todayKey(), startTs: Date.now(), days: {} };
   save();
 
   // ---------- calcul ----------
   function compute() {
-    const today = key(new Date());
+    const today = todayKey();
     const n = diffDays(state.start, today) + 1;
     const list = [];
     for (let i = 0; i < n; i++) {
       const k = key(addDays(parse(state.start), i));
       const d = state.days[k] || {};
-      list.push({ k, r: !!d.r, u: d.u || 0 });
+      list.push({ k, r: !!d.r, v: !!d.v, u: d.u || 0 });
     }
     let run = 0, best = 0, xp = 0, wins = 0;
     for (const d of list) {
-      if (d.r) run = 0; else { run++; xp += DAY_XP(run); }
+      if (d.r) run = 0; else { run++; xp += DAY_XP(run) + (d.v ? CHECK_XP : 0); }
       xp += WIN_XP * Math.min(d.u, WIN_XP_CAP);
       wins += d.u;
       best = Math.max(best, run);
@@ -215,7 +257,7 @@ footer button{ font:inherit; font-size:12px; color:var(--mute); background:none;
 
   function render() {
     const c = compute();
-    $('date').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    $('date').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
     $('streak').textContent = c.streak;
     $('unit').textContent = c.streak > 1 ? 'jours' : 'jour';
     $('sBest').textContent = c.best;
@@ -247,20 +289,26 @@ footer button{ font:inherit; font-size:12px; color:var(--mute); background:none;
       let cls = 'cell', attr = '';
       if (k > c.today) cls += ' fut';
       else if (k < state.start) cls += ' off';
-      else { cls += e.r ? ' gap' : ' ok'; attr = ` data-k="${k}"`; }
+      else { cls += e.r ? ' gap' : (e.v ? ' ok v' : ' ok'); attr = ` data-k="${k}"`; }
       if (k === c.today) cls += ' today';
       html += `<button class="${cls}"${attr} title="${d.toLocaleDateString('fr-FR')}">${e.u ? `<i>${e.u}</i>` : ''}</button>`;
     }
     $('grid').innerHTML = html;
 
-    const todayReset = !!(state.days[c.today] && state.days[c.today].r);
-    $('restart').textContent = todayReset ? 'Annuler' : 'Nouveau départ';
+    // boutons du jour
+    const dt = state.days[c.today] || {};
+    const done = !!dt.v && !dt.r;
+    $('check').classList.toggle('done', done);
+    $('check').disabled = !!dt.r;
+    $('checkTxt').textContent = done ? 'Journée validée' : 'Valider la journée';
+    $('restart').textContent = dt.r ? 'Annuler' : 'Nouveau départ';
     tick();
     checkUnlocks(c);
   }
 
   // ---------- récompenses ----------
   const queue = [];
+  let fx = false;                                            // vrai pendant qu'une animation joue
   function checkUnlocks(c) {
     if (!state.seen) { state.seen = { lvl: c.level, bdg: c.badges }; save(); return; }
     if (c.level > state.seen.lvl) queue.push({ kind: 'Nouveau niveau', title: 'Niveau ' + c.level, sub: levelName(c.level) });
@@ -273,49 +321,84 @@ footer button{ font:inherit; font-size:12px; color:var(--mute); background:none;
       state.seen.bdg = Math.max(state.seen.bdg, c.badges);
       save();
     }
-    showNext();
+    showNext(fx ? 1300 : 0);                                 // laisse finir l'animation avant l'écran de récompense
   }
-  function showNext() {
+  function showNext(delay) {
+    if (!queue.length) return;
+    if (delay) { setTimeout(() => showNext(0), delay); return; }
     const t = $('toast');
-    if (!t.hidden || !queue.length) return;
+    if (!t.hidden) return;
     const q = queue.shift();
     $('tKind').textContent = q.kind; $('tTitle').textContent = q.title; $('tSub').textContent = q.sub;
     t.hidden = false;
   }
-  $('toast').onclick = () => { $('toast').hidden = true; showNext(); };
+  $('toast').onclick = () => { $('toast').hidden = true; showNext(0); };
+
+  // ---------- animations ----------
+  function replay(el, cls, ms) {
+    if (!el) return;
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+    setTimeout(() => el.classList.remove(cls), ms);
+  }
+  const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
+  // exécute une action sur le jour k, puis joue les animations adaptées
+  function act(k, fn) {
+    const before = compute().xp;
+    const wasV = !!(state.days[k] && state.days[k].v);
+    fn(day(k));
+    save();
+    fx = true; render(); fx = false;
+    const gain = compute().xp - before;
+    if (gain > 0) { const g = $('gain'); g.textContent = '+' + gain + ' XP'; replay(g, 'show', 1250); }
+    if (!wasV && state.days[k].v) {
+      replay($('grid').querySelector(`[data-k="${k}"]`), 'pop', 900);
+      if (k === todayKey()) { replay($('check'), 'burst', 900); replay($('streak'), 'bump', 700); }
+      buzz(18);
+    }
+  }
 
   // ---------- actions ----------
   const day = k => state.days[k] || (state.days[k] = {});
-  function toggleReset(k) {
-    const d = day(k);
+  const today = () => todayKey();
+
+  // un tap sur un jour : propre → validé → nouveau départ → propre
+  const cycle = k => act(k, d => {
     if (d.r) { delete d.r; delete d.t; }
-    else { d.r = 1; if (k === key(new Date())) d.t = Date.now(); }
-    save(); render();
-  }
-  $('win').onclick = () => { const d = day(key(new Date())); d.u = (d.u || 0) + 1; save(); render(); };
-  $('restart').onclick = () => toggleReset(key(new Date()));
+    else if (d.v) { delete d.v; d.r = 1; if (k === today()) d.t = Date.now(); }
+    else d.v = 1;
+  });
+  $('check').onclick = () => { const k = today(); act(k, d => { if (d.r) return; if (d.v) delete d.v; else d.v = 1; }); };
+  $('win').onclick = () => { replay($('win'), 'burst', 900); act(today(), d => { d.u = (d.u || 0) + 1; }); buzz(10); };
+  $('restart').onclick = () => { const k = today(); act(k, d => {
+    if (d.r) { delete d.r; delete d.t; } else { d.r = 1; delete d.v; d.t = Date.now(); }
+  }); };
   $('grid').onclick = e => {
     const el = e.target.closest('.cell[data-k]');
-    if (el) toggleReset(el.dataset.k);
+    if (el) cycle(el.dataset.k);
   };
 
+  // menu discret
+  $('more').onclick = e => { e.stopPropagation(); $('menu').hidden = !$('menu').hidden; };
+  document.addEventListener('click', e => { if (!e.target.closest('#menu')) $('menu').hidden = true; });
   let armed = 0;
   $('reset').onclick = e => {
     if (!armed) {
       e.target.textContent = 'Confirmer : tout effacer ?';
       armed = setTimeout(() => { armed = 0; e.target.textContent = 'Tout effacer'; }, 3000);
+      e.stopPropagation();
       return;
     }
     clearTimeout(armed); armed = 0;
-    state = { start: key(new Date()), startTs: Date.now(), days: {} };
-    save(); e.target.textContent = 'Tout effacer'; render();
+    state = { start: todayKey(), startTs: Date.now(), days: {} };
+    save(); e.target.textContent = 'Tout effacer'; $('menu').hidden = true; render();
   };
 
   // ---------- boucle ----------
-  let lastDay = key(new Date());
+  let lastDay = todayKey();
   render();
   setInterval(tick, 1000);
-  setInterval(() => { const k = key(new Date()); if (k !== lastDay) { lastDay = k; render(); } }, 30000);
+  setInterval(() => { const k = todayKey(); if (k !== lastDay) { lastDay = k; render(); } }, 30000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
 
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
